@@ -1,59 +1,33 @@
 package com.khane.practice.controller;
 
 import com.khane.practice.entity.user.User;
-import com.khane.practice.repository.UserRepository;
-import org.springframework.stereotype.Controller;
+import com.khane.practice.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/user")
 public class UserController {
 
-    private final UserRepository userRepository;
+    @Autowired
+    private UserService  userService;
 
-    //Call the constructor for the above
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-    //Create a method for the user
-    @PostMapping("create")
+
+    @PostMapping("/create")
     public User createUser(@RequestBody User user){
-        return userRepository.save(user);
+        return userService.createUser(user);
     }
 
     @GetMapping
     public List<User> getAllUser(){
-        return userRepository.findAll();
+        return userService.getAllUser();
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable Long id) {
-        return userRepository.findById(id).orElseThrow(()-> new RuntimeException("User Not Found"));
+    public User getUserById(@PathVariable Long id){
+        return userService.getUserById(id);
     }
 
-    @PutMapping("/{id}")
-    public User updateUser (@PathVariable Long id, @RequestBody User updateUser){
-
-        User existingUser = userRepository.findById(id).orElseThrow(()-> new RuntimeException("User Not Found"));
-
-        //Update this fields for user
-        existingUser.setName(updateUser.getName());
-        existingUser.setUsername(updateUser.getUsername());
-
-        return userRepository.save(existingUser);
-
-    }
-    @DeleteMapping("/{id}")
-
-    //use String to return a value or void instead
-    public String deleteUser (@PathVariable Long id){
-        User user = userRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("User Not Found"));
-
-        userRepository.delete(user);
-
-        return "User deleted successfully.";
-    }
 }
