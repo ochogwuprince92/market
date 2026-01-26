@@ -2,16 +2,17 @@ package com.khane.practice.service;
 
 import com.khane.practice.entity.user.User;
 import com.khane.practice.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public List<User> getAllUser() {
         return userRepository.findAll();
@@ -22,12 +23,14 @@ public class UserService {
     }
 
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User Not Found"));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User Not Found"));
     }
 
     public User updateUser(Long id, User user) {
 
-        User existingUser = userRepository.findById(id).orElseThrow(()-> new RuntimeException("User Not Found"));
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(()-> new RuntimeException("User Not Found"));
 
     // Update fields for user
         existingUser.setUsername(user.getUsername());

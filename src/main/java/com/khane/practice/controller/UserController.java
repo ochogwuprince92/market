@@ -2,6 +2,7 @@ package com.khane.practice.controller;
 
 import com.khane.practice.entity.user.User;
 import com.khane.practice.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,10 +10,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService  userService;
+    private final UserService  userService;
 
     @PostMapping("/create")
     public User createUser(@RequestBody User user){
