@@ -1,6 +1,7 @@
 package com.khane.practice.entity.user;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.khane.practice.entity.cart.Cart;
 import com.khane.practice.entity.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
@@ -26,9 +27,14 @@ public class User {
     private String password;
 
     @OneToMany(mappedBy = "user",
-            cascade = CascadeType.ALL, orphanRemoval = true)
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
     @JsonManagedReference
     private List<Product> products = new ArrayList<>();
+
+//    Map user to cart; one user to one cart
+    private Cart cart;
+
 }
 ////    Constructor
 //    public User(Long id, String name, String username, String email, String password) {
