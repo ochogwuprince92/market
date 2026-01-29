@@ -1,5 +1,6 @@
 package com.khane.practice.entity.cart;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
 import jakarta.persistence.*;
@@ -25,8 +26,9 @@ public class Cart {
 
 //    Map user to cart; A user has only one cart
 
-    @OneToMany
+    @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @JsonBackReference
     private User user;
 
 //    Product to cart; contains many products

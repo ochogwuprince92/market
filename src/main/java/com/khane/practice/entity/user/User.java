@@ -33,6 +33,8 @@ public class User {
     private List<Product> products = new ArrayList<>();
 
 //    Map user to cart; one user to one cart
+    @OneToOne(mappedBy = "user")
+    @JsonManagedReference
     private Cart cart;
 
 }
