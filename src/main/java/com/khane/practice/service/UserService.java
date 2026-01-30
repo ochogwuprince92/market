@@ -1,5 +1,6 @@
 package com.khane.practice.service;
 
+import com.khane.practice.dto.user.UserResponseDto;
 import com.khane.practice.entity.user.User;
 import com.khane.practice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,12 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public List<User> getAllUser() {
-        return userRepository.findAll();
+//    Use UserDTO instead of User directly
+    public List<UserResponseDto> getAllUser() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToUserResponse)
+                .toList();
     }
 
     public User createUser(User user){
@@ -46,5 +51,15 @@ public class UserService {
                 .orElseThrow(()-> new RuntimeException("User not found"));
 
         userRepository.delete(existingUser);
+    }
+
+//    Map User to UserResponseDto
+    private UserResponseDto mapToUserResponse(User user){
+        return new UserResponseDto(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getUsername()
+        );
     }
 }

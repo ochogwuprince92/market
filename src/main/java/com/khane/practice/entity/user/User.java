@@ -26,6 +26,7 @@ public class User {
     private String email;
     private String password;
 
+//    Map user to product
     @OneToMany(mappedBy = "user",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
