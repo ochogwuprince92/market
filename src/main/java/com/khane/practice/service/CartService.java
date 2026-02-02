@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +20,7 @@ public class CartService {
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
 
-    public Cart createCartForUser(Long userId) {
+    public Cart createCartForUser(UUID userId) {
 //      Create cart for use
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new RuntimeException("User not found"));
@@ -33,14 +34,14 @@ public class CartService {
     }
 
 //  Get cart by user
-    public Cart getCartByUser(Long userId) {
+    public Cart getCartByUser(UUID userId) {
 
         return cartRepository.findById(userId)
                 .orElseThrow(()->new RuntimeException("Cart not found"));
     }
 
 //  Add products to cart
-    public Cart addProductToCart(Long cartId, Long productId) {
+    public Cart addProductToCart(UUID cartId, UUID productId) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(()-> new RuntimeException("Product not found"));
@@ -52,7 +53,7 @@ public class CartService {
         return cartRepository.save(cart);
     }
 
-    public Cart removeProductFromCart(Long cartId, Long productId) {
+    public Cart removeProductFromCart(UUID cartId, UUID productId) {
 
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(()-> new RuntimeException("Cart noot found"));

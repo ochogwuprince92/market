@@ -9,18 +9,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
+@RequiredArgsConstructor
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
 
-    //Either use @RequiredArgsConstructor or constructor
-    public ProductService(ProductRepository productRepository, UserRepository userRepository) {
-        this.productRepository = productRepository;
-        this.userRepository = userRepository;
-    }
 
     public List<Product> getAllProduct() {
         return productRepository.findAll();
@@ -30,12 +27,12 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public Product getAllProductById(Long id) {
+    public Product getAllProductById(UUID id) {
         return productRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Item searched is not found"));
     }
 
-    public Product updateProduct(Long id, Product product) {
+    public Product updateProduct(UUID id, Product product) {
 
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Item searched is not found"));
@@ -51,7 +48,7 @@ public class ProductService {
 
     }
 
-    public void deleteProduct(Long id) {
+    public void deleteProduct(UUID id) {
 
         Product existingProduct = productRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Item not found"));
@@ -59,7 +56,7 @@ public class ProductService {
         productRepository.delete(existingProduct);
     }
 
-    public Product addProductToUser(Long userId, Product product) {
+    public Product addProductToUser(UUID userId, Product product) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new RuntimeException("User not found"));
@@ -73,7 +70,7 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public List<Product> getProductsByUser(Long userId) {
+    public List<Product> getProductsByUser(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new RuntimeException("User not found"));
 
