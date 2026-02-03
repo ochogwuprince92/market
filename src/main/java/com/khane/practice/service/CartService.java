@@ -3,6 +3,7 @@ package com.khane.practice.service;
 import com.khane.practice.entity.cart.Cart;
 import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
+import com.khane.practice.exception.UserNotFoundException;
 import com.khane.practice.repository.CartRepository;
 import com.khane.practice.repository.ProductRepository;
 import com.khane.practice.repository.UserRepository;
@@ -23,7 +24,7 @@ public class CartService {
     public Cart createCartForUser(UUID userId) {
 //      Create cart for use
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("User not found"));
+                .orElseThrow(()-> new UserNotFoundException("User not found"));
 
 //      If user found, create cart
         Cart cart = new Cart();
@@ -37,17 +38,17 @@ public class CartService {
     public Cart getCartByUser(UUID userId) {
 
         return cartRepository.findById(userId)
-                .orElseThrow(()->new RuntimeException("Cart not found"));
+                .orElseThrow(()->new UserNotFoundException("Cart not found"));
     }
 
 //  Add products to cart
     public Cart addProductToCart(UUID cartId, UUID productId) {
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(()-> new RuntimeException("Product not found"));
+                .orElseThrow(()-> new UserNotFoundException("Product not found"));
 
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(()-> new RuntimeException("Cart not found"));
+                .orElseThrow(()-> new UserNotFoundException("Cart not found"));
 
         cart.getProducts().add(product);
         return cartRepository.save(cart);
@@ -56,7 +57,7 @@ public class CartService {
     public Cart removeProductFromCart(UUID cartId, UUID productId) {
 
         Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(()-> new RuntimeException("Cart noot found"));
+                .orElseThrow(()-> new UserNotFoundException("Cart noot found"));
 
         cart.getProducts()
                 .removeIf(p -> Objects.equals(p.getId(), productId));

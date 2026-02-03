@@ -2,7 +2,9 @@ package com.khane.practice.service;
 
 import com.khane.practice.dto.user.UserRequestDto;
 import com.khane.practice.dto.user.UserResponseDto;
+import com.khane.practice.dto.user.UserUpdateResponseDto;
 import com.khane.practice.entity.user.User;
+import com.khane.practice.exception.UserNotFoundException;
 import com.khane.practice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,28 +46,32 @@ public class UserService {
     }
 
 
-    public User getUserById(UUID id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+    public UserResponseDto getUserById(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
+
+        return mapToUserResponse(user);
     }
 
-    public User updateUser(UUID id, User user) {
+    public UserResponseDto updateUser(UUID id, UserUpdateResponseDto userUpdateResponseDto) {
 
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User Not Found"));
+                .orElseThrow(() -> new UserNotFoundException("User Not Found"));
 
         // Update fields for user
-        existingUser.setUsername(user.getUsername());
-        existingUser.setName(user.getName());
+        existingUser.setUsername(userUpdateResponseDto.getUsername());
+        existingUser.setName(userUpdateResponseDto.getName());
 
         // Save the update
-        return userRepository.save(existingUser);
+        User updatedUser = userRepository.save(existingUser);
+
+        return mapToUserResponse(updatedUser);
     }
 
     public void deleteUser(UUID id) {
 
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         userRepository.delete(existingUser);
     }

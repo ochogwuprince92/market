@@ -2,6 +2,7 @@ package com.khane.practice.service;
 
 import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
+import com.khane.practice.exception.UserNotFoundException;
 import com.khane.practice.repository.ProductRepository;
 import com.khane.practice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,13 +30,13 @@ public class ProductService {
 
     public Product getAllProductById(UUID id) {
         return productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Item searched is not found"));
+                .orElseThrow(()-> new UserNotFoundException("Item searched is not found"));
     }
 
     public Product updateProduct(UUID id, Product product) {
 
         Product existingProduct = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Item searched is not found"));
+                .orElseThrow(()-> new UserNotFoundException("Item searched is not found"));
 
 //        Update fields
         existingProduct.setDescription(product.getDescription());
@@ -51,7 +52,7 @@ public class ProductService {
     public void deleteProduct(UUID id) {
 
         Product existingProduct = productRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Item not found"));
+                .orElseThrow(()-> new UserNotFoundException("Item not found"));
 
         productRepository.delete(existingProduct);
     }
@@ -59,7 +60,7 @@ public class ProductService {
     public Product addProductToUser(UUID userId, Product product) {
 
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("User not found"));
+                .orElseThrow(()-> new UserNotFoundException("User not found"));
 
 //      Map product to user
         product.setUser(user);
@@ -72,7 +73,7 @@ public class ProductService {
 
     public List<Product> getProductsByUser(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(()-> new RuntimeException("User not found"));
+                .orElseThrow(()-> new UserNotFoundException("User not found"));
 
         return user.getProducts();
     }
