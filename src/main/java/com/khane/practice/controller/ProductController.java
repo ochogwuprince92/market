@@ -1,10 +1,15 @@
 package com.khane.practice.controller;
 
+import com.khane.practice.dto.product.ProductRequestDto;
+import com.khane.practice.dto.product.ProductResponseDto;
 import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
 import com.khane.practice.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,23 +23,30 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<Product> getAllProduct(){
+    public List<ProductResponseDto> getAllProduct(){
         return productService.getAllProduct();
     }
     @PostMapping("/add")
-    public Product addProduct(@RequestBody Product product){
-        return productService.addProduct(product);
+    public ResponseEntity <ProductResponseDto> addProduct(
+            @RequestBody @Valid ProductRequestDto productRequestDto){
+
+        ProductResponseDto productResponseDto = productService.addProduct(productRequestDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productResponseDto);
     }
 
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable UUID id){
-        return productService.getAllProductById(id);
+    public ProductResponseDto getProductById(@PathVariable UUID id){
+        return productService.getProductById(id);
     }
 
+//    Update product
     @PutMapping("/{id}")
-    public Product updateProduct(@PathVariable UUID id,
-                                 @RequestBody Product product){
-        return productService.updateProduct(id, product);
+    public ResponseEntity <ProductResponseDto> updateProduct(
+            @PathVariable UUID id,
+            @RequestBody ProductRequestDto productRequestDto){
+
+        ProductResponseDto productResponseDto = productService.updateProduct(id, productRequestDto);
+        return ResponseEntity.ok(productResponseDto);
     }
 
     @DeleteMapping("/{id}")
@@ -46,14 +58,14 @@ public class ProductController {
     }
 
     @PostMapping("/{userId}/products")
-    public Product addProductToUser(@PathVariable UUID userId,
-                                    @RequestBody Product product){
+    public ProductResponseDto addProductToUser(@PathVariable UUID userId,
+                                    @RequestBody @Valid ProductRequestDto productRequestDto){
 
-        return productService.addProductToUser(userId, product);
+        return productService.addProductToUser(userId, productRequestDto);
     }
 
     @GetMapping("/{userId}/products")
-    public List<Product> getProductsByUser(@PathVariable UUID userId){
+    public List<ProductResponseDto> getProductsByUser(@PathVariable UUID userId){
         return productService.getProductsByUser(userId);
     }
 

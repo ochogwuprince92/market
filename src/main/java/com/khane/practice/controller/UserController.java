@@ -2,14 +2,10 @@ package com.khane.practice.controller;
 
 import com.khane.practice.dto.user.UserRequestDto;
 import com.khane.practice.dto.user.UserResponseDto;
-import com.khane.practice.dto.user.UserUpdateResponseDto;
-import com.khane.practice.entity.user.User;
+import com.khane.practice.dto.user.UserUpdateRequestDto;
 import com.khane.practice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,18 +40,20 @@ public class UserController {
 
 //    Update User
     @PutMapping("/{id}")
-    public UserResponseDto updateUser(@PathVariable UUID id,
-                                            @RequestBody @Valid UserUpdateResponseDto userUpdateResponseDto){
-        return userService.updateUser(id, userUpdateResponseDto);
+    public ResponseEntity <UserResponseDto> updateUser(@PathVariable UUID id,
+                                            @RequestBody @Valid UserUpdateRequestDto userUpdateRequestDto){
+
+        UserResponseDto updated = userService.updateUser(id, userUpdateRequestDto);
+        return ResponseEntity.ok(updated);
     }
 
 //    Delete User
     @DeleteMapping("/{id}")
-    public String deleteUser(@PathVariable UUID id){
+    public ResponseEntity <String> deleteUser(@PathVariable UUID id){
 
         userService.deleteUser(id);
 
-        return "User deleted successfully";
+        return ResponseEntity.ok("User deleted successfully");
 
     }
 

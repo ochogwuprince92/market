@@ -1,6 +1,7 @@
 package com.khane.practice.entity.cart;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.khane.practice.dto.product.ProductResponseDto;
 import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
 import jakarta.persistence.*;

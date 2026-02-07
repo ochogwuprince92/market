@@ -2,13 +2,11 @@ package com.khane.practice.service;
 
 import com.khane.practice.dto.user.UserRequestDto;
 import com.khane.practice.dto.user.UserResponseDto;
-import com.khane.practice.dto.user.UserUpdateResponseDto;
+import com.khane.practice.dto.user.UserUpdateRequestDto;
 import com.khane.practice.entity.user.User;
 import com.khane.practice.exception.UserNotFoundException;
 import com.khane.practice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,12 +27,7 @@ public class UserService {
 
         User newUser = userRepository.save(user);
 
-        return new UserResponseDto(
-                newUser.getId(),
-                newUser.getName(),
-                newUser.getUsername(),
-                newUser.getEmail()
-        );
+        return mapToUserResponse(newUser);
     }
 
     //    Use UserDTO instead of User directly
@@ -53,7 +46,7 @@ public class UserService {
         return mapToUserResponse(user);
     }
 
-    public UserResponseDto updateUser(UUID id, UserUpdateResponseDto userUpdateResponseDto) {
+    public UserResponseDto updateUser(UUID id, UserUpdateRequestDto userUpdateResponseDto) {
 
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException("User Not Found"));

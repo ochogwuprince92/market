@@ -1,8 +1,13 @@
 package com.khane.practice.controller;
 
+import com.khane.practice.dto.cart.CartRequestDto;
+import com.khane.practice.dto.cart.CartResponseDto;
 import com.khane.practice.entity.cart.Cart;
 import com.khane.practice.service.CartService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -16,28 +21,37 @@ public class CartController {
 
     //  Create user for cart
     @PostMapping("/user/{userId}")
-    public Cart createCartForUser(@PathVariable UUID userId){
-        return cartService.createCartForUser(userId);
+    public ResponseEntity <CartResponseDto> createCartForUser(
+                                            @PathVariable UUID userId){
+        CartResponseDto cartResponseDto = cartService.createCartForUser(userId);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(cartResponseDto);
     }
 
     //  Get cart by user
     @GetMapping("/user/{userId}")
-    public Cart getCartByUser(@PathVariable UUID userId){
-        return cartService.getCartByUser(userId);
+    public ResponseEntity <CartResponseDto> getCartByUser(
+                                            @PathVariable UUID userId){
+        CartResponseDto cartResponseDto = cartService.getCartByUser(userId);
+
+        return ResponseEntity.ok(cartResponseDto);
     }
 
     // add product to cart
-    @PostMapping("/{cartId}/product/{productId}")
-    public Cart addProductToCart(@PathVariable UUID cartId,
-                                 @PathVariable UUID productId) {
-        return cartService.addProductToCart(cartId, productId);
+    @PostMapping("/addProduct")
+    public ResponseEntity<CartResponseDto> addProductToCart(
+                @RequestBody @Valid CartRequestDto cartRequestDto) {
+        CartResponseDto cartResponseDto = cartService.addProductToCart(cartRequestDto);
+        return ResponseEntity.ok(cartResponseDto);
     }
 
     // remove product from cart
     @DeleteMapping("/{cartId}/product/{productId}")
-    public Cart removeProductFromCart(@PathVariable UUID cartId,
+    public ResponseEntity<CartResponseDto> removeProductFromCart(@PathVariable UUID cartId,
                                       @PathVariable UUID productId) {
-        return cartService.removeProductFromCart(cartId, productId);
+        CartResponseDto cartResponseDto = cartService.removeProductFromCart(cartId, productId);
+
+        return ResponseEntity.ok(cartResponseDto);
     }
 
 }
