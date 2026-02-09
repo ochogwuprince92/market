@@ -26,6 +26,7 @@ public class ProductController {
     public List<ProductResponseDto> getAllProduct(){
         return productService.getAllProduct();
     }
+
     @PostMapping("/add")
     public ResponseEntity <ProductResponseDto> addProduct(
             @RequestBody @Valid ProductRequestDto productRequestDto){

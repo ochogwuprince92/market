@@ -30,7 +30,7 @@ public class UserService {
         return mapToUserResponse(newUser);
     }
 
-    //    Use UserDTO instead of User directly
+    //  List users
     public List<UserResponseDto> getAllUser() {
         return userRepository.findAll()
                 .stream()
@@ -45,7 +45,7 @@ public class UserService {
 
         return mapToUserResponse(user);
     }
-
+    //Update user
     public UserResponseDto updateUser(UUID id, UserUpdateRequestDto userUpdateResponseDto) {
 
         User existingUser = userRepository.findById(id)
@@ -60,7 +60,7 @@ public class UserService {
 
         return mapToUserResponse(updatedUser);
     }
-
+    //    Delete user
     public void deleteUser(UUID id) {
 
         User existingUser = userRepository.findById(id)
