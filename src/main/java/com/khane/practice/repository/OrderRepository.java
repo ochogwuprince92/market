@@ -5,12 +5,14 @@ import com.khane.practice.entity.product.Product;
 import com.khane.practice.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.w3c.dom.stylesheets.LinkStyle;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-    Optional<Order> findByUser(User user);
+    List <Order> findByUser(User user);
 }

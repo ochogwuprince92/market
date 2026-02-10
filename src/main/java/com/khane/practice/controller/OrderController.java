@@ -2,6 +2,7 @@ package com.khane.practice.controller;
 
 import com.khane.practice.dto.order.OrderRequestDto;
 import com.khane.practice.dto.order.OrderResponseDto;
+import com.khane.practice.entity.order.OrderStatus;
 import com.khane.practice.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderResponseDto> updateOrderStatus(
             @PathVariable UUID orderId,
-            @RequestParam String status) {
+            @RequestParam OrderStatus status) {
 
         OrderResponseDto updatedOrder = orderService.updateOrderStatus(orderId, status);
         return ResponseEntity.ok(updatedOrder);
