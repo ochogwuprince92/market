@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,10 +38,17 @@ public class OrderService {
         Cart cart = cartRepository.findById(dto.getCartId())
                 .orElseThrow(() -> new CartNotFoundException("Cart not found"));
 
+        BigDecimal totalPrice = cart.getProducts()
+                .stream()
+                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         Order order = new Order();
         order.setUser(user);
         order.setCart(cart);
+        order.setTotalPrice(totalPrice);
         order.setStatus(OrderStatus.NEW);
+        order.setCreatedAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
         return mapToOrderResponse(savedOrder);
@@ -68,12 +76,12 @@ public class OrderService {
     }
 
     // Update order status
-    public OrderResponseDto updateOrderStatus(UUID orderId, String status) {
+    public OrderResponseDto updateOrderStatus(UUID orderId, OrderStatus status) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
 
-        order.setStatus(OrderStatus.valueOf(status.toUpperCase()));
+        order.setStatus(status);
         Order updatedOrder = orderRepository.save(order);
 
         return mapToOrderResponse(updatedOrder);
@@ -94,10 +102,8 @@ public class OrderService {
                         p.getUser() != null ? p.getUser().getId() : null
                 ))
                 .toList();
-
-        BigDecimal totalPrice = products.stream()
-                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Use totalPrice directly from order
+        BigDecimal totalPrice = order.getTotalPrice();
 
         return new OrderResponseDto(
                 order.getId(),
