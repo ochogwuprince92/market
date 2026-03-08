@@ -14,5 +14,7 @@ import java.util.UUID;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-    List <Order> findByUser(User user);
+    List<Order> findByUser(User user);
+
+    Optional<Order> findByPaystackReference(String paystackReference);
 }

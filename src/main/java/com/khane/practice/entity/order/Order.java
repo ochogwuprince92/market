@@ -42,4 +42,20 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    // Payment tracking fields
+    @Column(name = "paystack_reference", unique = true)
+    private String paystackReference;
+
+    @Column(name = "paystack_access_code")
+    private String paystackAccessCode;
+
+    @Column(name = "authorization_url")
+    private String authorizationUrl;
+
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
+    @Column(name = "payment_method")
+    private String paymentMethod;
 }

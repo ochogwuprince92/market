@@ -45,6 +45,7 @@ public class CartService {
     // ------------------------------
     // Add product to cart
     // ------------------------------
+
     public CartResponseDto addProductToCart(CartRequestDto requestDto) {
         User user = userRepository.findById(requestDto.getUserId())
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
