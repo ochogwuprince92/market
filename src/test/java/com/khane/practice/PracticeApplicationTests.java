@@ -1,10 +1,10 @@
-package com.khane.practice;
+package com.khane.market;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class PracticeApplicationTests {
+class marketApplicationTests {
 
 	@Test
 	void contextLoads() {
