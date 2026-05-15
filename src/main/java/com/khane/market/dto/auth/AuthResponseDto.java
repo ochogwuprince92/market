@@ -10,10 +10,10 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 public class AuthResponseDto {
-
-   private UUID id;
-   private String email;
-   private String password;
-   private Set<UserRole> roles;
+    private UUID id;
+    private String email;
+    private String name;
+    private Set<UserRole> roles;
+    private String token;
+    private String message;
 }
- 

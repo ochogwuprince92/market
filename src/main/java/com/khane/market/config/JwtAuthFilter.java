@@ -7,13 +7,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.UUID;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -29,37 +30,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         try {
-            // Extract token from Authorization header
             String token = extractTokenFromRequest(request);
 
             if (token != null && jwtUtil.isTokenValid(token)) {
-                // Token is valid, extract user info
-                UUID userId = jwtUtil.extractUserId(token);
-                String email = jwtUtil.extractEmail(token);
+                String userId = jwtUtil.extractUserId(token).toString();
+                Set<String> roles = jwtUtil.extractRoles(token);
 
-                // Create authentication object
+                // Convert roles to Spring Security authorities with ROLE_ prefix
+                var authorities = roles.stream()
+                        .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                        .collect(Collectors.toList());
+
                 UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(
-                        userId.toString(),
-                        null,
-                        new ArrayList<>()
-                    );
+                        new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
-                // Set in security context
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                log.debug("Token validated for user: {}", email);
+                log.debug("Authenticated user: {} with roles: {}", userId, roles);
             }
 
         } catch (Exception e) {
-            log.error("Error processing JWT token", e);
+            log.error("Error processing JWT token: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Extract Bearer token from Authorization header
-     */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -68,4 +63,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return null;
     }
 }
-
