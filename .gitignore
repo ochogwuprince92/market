@@ -30,4 +30,4 @@ build/
 !**/src/test/**/build/
 
 ###Environment variable
-.env
+application-local.properties
