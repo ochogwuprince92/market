@@ -1,8 +1,6 @@
 package com.khane.market.controller;
 
-import com.khane.market.dto.auth.AuthResponseDto;
-import com.khane.market.dto.auth.LoginRequestDto;
-import com.khane.market.dto.auth.RegisterRequestDto;
+import com.khane.market.dto.auth.*;
 import com.khane.market.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,8 +28,32 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> login(
             @Valid @RequestBody LoginRequestDto request) {
-        log.info("Login attempt for email: {}", request.getEmail());
+        log.info("Login attempt for identifier: {}", request.getIdentifier());
         AuthResponseDto response = authService.loginUser(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/verify-email")
+    public ResponseEntity<AuthResponseDto> verifyEmail(
+            @RequestParam String token) {
+        log.info("Email verification attempt with token");
+        AuthResponseDto response = authService.verifyEmail(token);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<AuthResponseDto> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDto request) {
+        log.info("Forgot password request for email: {}", request.getEmail());
+        AuthResponseDto response = authService.forgotPassword(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<AuthResponseDto> resetPassword(
+            @Valid @RequestBody ResetPasswordRequestDto request) {
+        log.info("Reset password attempt");
+        AuthResponseDto response = authService.resetPassword(request);
         return ResponseEntity.ok(response);
     }
 

@@ -1,15 +1,13 @@
 package com.khane.market.dto.auth;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class LoginRequestDto {
 
-    @Email(message = "Email must be valid")
-    @NotBlank(message = "Email is required")
-    private String email;
+    @NotBlank(message = "Email or phone number is required")
+    private String identifier; // can be email or phone number
 
     @NotBlank(message = "Password is required")
     private String password;

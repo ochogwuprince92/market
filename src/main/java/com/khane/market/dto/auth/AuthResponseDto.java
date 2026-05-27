@@ -12,6 +12,7 @@ import java.util.UUID;
 public class AuthResponseDto {
     private UUID id;
     private String email;
+    private String phoneNumber;
     private String name;
     private Set<UserRole> roles;
     private String token;

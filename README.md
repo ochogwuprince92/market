@@ -177,8 +177,11 @@ docker run -p 8085:8085 \
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| POST | `/api/v1/auth/register` | Register a new user | No |
-| POST | `/api/v1/auth/login` | Login and get JWT token | No |
+| POST | `/api/v1/auth/register` | Register a new user with phone & email verification | No |
+| POST | `/api/v1/auth/login` | Login with email or phone number | No |
+| GET | `/api/v1/auth/verify-email?token=xxx` | Verify email address | No |
+| POST | `/api/v1/auth/forgot-password` | Request password reset email | No |
+| POST | `/api/v1/auth/reset-password` | Reset password with token | No |
 | GET | `/api/v1/auth/health` | Auth service health check | No |
 
 **Register:**
@@ -188,7 +191,10 @@ POST /api/v1/auth/register
   "name": "John Doe",
   "username": "johndoe",
   "email": "john@example.com",
-  "password": "password123"
+  "phoneNumber": "+234803123456",
+  "password": "SecurePass123!",
+  "confirmPassword": "SecurePass123!",
+  "role": "CUSTOMER"
 }
 ```
 
@@ -197,25 +203,185 @@ POST /api/v1/auth/register
 {
   "id": "8639d76f-9f5b-431b-beb7-4ac11aaf6b88",
   "email": "john@example.com",
+  "phoneNumber": "+234803123456",
   "name": "John Doe",
   "roles": ["CUSTOMER"],
-  "token": "eyJhbGciOiJIUzUxMiJ9...",
-  "message": "Registration successful"
+  "token": null,
+  "message": "Registration successful. Please check your email to verify your account."
 }
 ```
 
-**Login:**
+**Login (Email or Phone):**
 ```json
 POST /api/v1/auth/login
 {
+  "identifier": "john@example.com OR +234803123456",
+  "password": "SecurePass123!"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "8639d76f-9f5b-431b-beb7-4ac11aaf6b88",
   "email": "john@example.com",
-  "password": "password123"
+  "phoneNumber": "+234803123456",
+  "name": "John Doe",
+  "roles": ["CUSTOMER"],
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "message": "Login successful"
+}
+```
+
+**Verify Email:**
+```
+GET /api/v1/auth/verify-email?token=secure-token-from-email
+
+Response:
+{
+  "id": "8639d76f-9f5b-431b-beb7-4ac11aaf6b88",
+  "email": "john@example.com",
+  "phoneNumber": "+234803123456",
+  "name": "John Doe",
+  "roles": ["CUSTOMER"],
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "message": "Email verified successfully"
+}
+```
+
+**Forgot Password:**
+```json
+POST /api/v1/auth/forgot-password
+{
+  "email": "john@example.com"
+}
+
+Response:
+{
+  "id": "8639d76f-9f5b-431b-beb7-4ac11aaf6b88",
+  "email": "john@example.com",
+  "phoneNumber": "+234803123456",
+  "name": "John Doe",
+  "roles": ["CUSTOMER"],
+  "token": null,
+  "message": "Password reset link sent to your email"
+}
+```
+
+**Reset Password:**
+```json
+POST /api/v1/auth/reset-password
+{
+  "token": "reset-token-from-email",
+  "newPassword": "NewPass123!",
+  "confirmPassword": "NewPass123!"
+}
+
+Response:
+{
+  "id": "8639d76f-9f5b-431b-beb7-4ac11aaf6b88",
+  "email": "john@example.com",
+  "phoneNumber": "+234803123456",
+  "name": "John Doe",
+  "roles": ["CUSTOMER"],
+  "token": "eyJhbGciOiJIUzUxMiJ9...",
+  "message": "Password reset successful"
 }
 ```
 
 ---
 
-### Users
+### Enhanced Authentication Features
+
+#### 1. Phone Number Support
+- Phone numbers are **unique** across the system
+- Validation uses **E.164 international format** (e.g., +234803123456)
+- Users can login using either **email OR phone number**
+- Phone number is returned in all auth responses
+
+#### 2. Confirm Password (Registration)
+- `confirmPassword` field is **required** during registration
+- Must match `password` field exactly
+- Error returned if mismatch: `"Passwords do not match"`
+- `confirmPassword` is **NOT stored** in the database
+
+#### 3. Email Verification
+- **Required before login**: Users cannot login until email is verified
+- Verification token sent to registered email
+- Token valid for **24 hours**
+- Error if email not verified: `"Please verify your email first"`
+- Verification endpoint: `GET /api/v1/auth/verify-email?token=xxx`
+- Removes token after successful verification
+
+#### 4. Forgot Password Flow
+- Endpoint: `POST /api/v1/auth/forgot-password`
+- Reset token generated (valid **1 hour**)
+- Reset link sent to registered email with token
+- Token tracked with expiry timestamp
+
+#### 5. Reset Password Flow
+- Endpoint: `POST /api/v1/auth/reset-password`
+- Validates token exists and is not expired
+- Validates new passwords match
+- Password updated with **BCrypt hashing**
+- Token removed after successful reset
+- JWT token issued immediately after reset
+
+#### 6. Flexible Login
+- Endpoint: `POST /api/v1/auth/login`
+- Accepts `identifier` field (email or phone)
+- Auto-detects format:
+  - Contains `@` → treated as email
+  - Otherwise → treated as phone number
+- Verifies email is verified before allowing login
+- Returns JWT token on success
+
+### Security Features
+
+✅ **All passwords BCrypt hashed** (never stored in plain text)  
+✅ **Secure random tokens** generated using `SecureRandom`  
+✅ **Email verification required** before login  
+✅ **Password reset tokens expire** after 1 hour  
+✅ **Email verification tokens expire** after 24 hours  
+✅ **JWT tokens issued** after successful authentication  
+✅ **Phone numbers must be unique**  
+✅ **Email and phone duplicates validated**  
+✅ **Token expiry tracked** with `LocalDateTime`  
+
+### User Entity Fields
+
+| Field | Type | Required | Unique | Purpose |
+|-------|------|----------|--------|---------|
+| `phoneNumber` | String | Yes | Yes | Login identifier, profile info |
+| `emailVerified` | Boolean | Yes | No | Tracks if email is verified |
+| `emailVerificationToken` | String | No | No | Token for email verification |
+| `emailVerificationTokenExpiry` | LocalDateTime | No | No | When verification token expires |
+| `passwordResetToken` | String | No | No | Token for password reset |
+| `passwordResetTokenExpiry` | LocalDateTime | No | No | When reset token expires |
+
+### Email Configuration
+
+The system logs email links (ready for production email provider integration). Configure these environment variables:
+
+```properties
+APP_EMAIL_FROM=noreply@market.com
+APP_FRONTEND_URL=http://localhost:3000
+```
+
+For production, integrate with email provider (SendGrid, AWS SES, Gmail SMTP):
+
+```properties
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=${MAIL_USERNAME}
+spring.mail.password=${MAIL_PASSWORD}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+```
+
+---
+
+## Users
 
 > Requires `ADMIN` role
 
@@ -432,4 +598,4 @@ All errors return a consistent JSON structure:
 
 ---
                     
-## Ochogwu Prince 
+## Ochogwu Prince

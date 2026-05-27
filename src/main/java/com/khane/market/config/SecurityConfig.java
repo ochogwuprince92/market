@@ -34,20 +34,46 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints
+                        // Static resources and public web pages
+                        .requestMatchers(
+                                "/",
+                                "/home",
+                                "/index",
+                                "/products",
+                                "/products/**",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico",
+                                "/login",
+                                "/register"
+                        ).permitAll()
+
+                        // API public endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/product/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
 
-                        // Admin only
+                        // Admin only (web)
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        // Seller dashboard (web)
+                        .requestMatchers("/seller/**").hasAnyRole("SELLER", "ADMIN")
+
+                        // Admin only (API)
                         .requestMatchers("/api/v1/user/**").hasRole("ADMIN")
 
-                        // Seller and Admin
-                        .requestMatchers(HttpMethod.POST, "/api/v1/products/**").hasAnyRole("SELLER", "ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/products/**").hasAnyRole("SELLER", "ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/products/**").hasAnyRole("SELLER", "ADMIN")
+                        // Seller and Admin (API)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/product/**").hasAnyRole("SELLER", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/product/**").hasAnyRole("SELLER", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/product/**").hasAnyRole("SELLER", "ADMIN")
 
-                        // Customer, Seller and Admin
+                        // Customer, Seller and Admin (API)
                         .requestMatchers("/api/v1/cart/**").hasAnyRole("CUSTOMER", "SELLER", "ADMIN")
                         .requestMatchers("/api/v1/orders/**").hasAnyRole("CUSTOMER", "SELLER", "ADMIN")
                         .requestMatchers("/api/v1/payments/**").hasAnyRole("CUSTOMER", "SELLER", "ADMIN")

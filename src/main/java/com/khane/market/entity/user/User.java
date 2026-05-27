@@ -9,10 +9,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
 @Table(name = "users", indexes = { @Index(name = "idx_email", columnList = "email"),
+                                @Index(name = "idx_phone", columnList = "phoneNumber"),
                                 @Index(name = "idx_name", columnList = "name")}
 )
 @Getter
@@ -33,7 +35,29 @@ public class User {
 
     @Email(message = "Email cannot be empty")
     private String email;
+
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
+
     private String password;
+
+    // Email verification fields
+//    @Column(nullable = false)
+    @Column(name = "email_verified", nullable = false)
+    private Boolean emailVerified = false;
+
+    @Column(name = "email_verification_token")
+    private String emailVerificationToken;
+
+    @Column(name = "email_verification_token_expiry")
+    private LocalDateTime emailVerificationTokenExpiry;
+
+    // Password reset fields
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_token_expiry")
+    private LocalDateTime passwordResetTokenExpiry;
 
 //    Map user to product
     @OneToMany(mappedBy = "user",
