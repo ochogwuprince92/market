@@ -31,7 +31,10 @@ public class ProductService {
                 .toList();
     }
 
-    public ProductResponseDto addProduct(ProductRequestDto productRequestDto) {
+    public ProductResponseDto addProduct(ProductRequestDto productRequestDto, UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new UserNotFoundException("User Not Found"));
 
 //      Map DTO (fields) to entity so that Repo can access it
         Product product = new Product();
@@ -40,6 +43,7 @@ public class ProductService {
         product.setPrice(productRequestDto.getPrice());
         product.setDescription(productRequestDto.getDescription());
         product.setCategory(productRequestDto.getCategory());
+        product.setUser(user);
 
 //      Save to db
         Product addedProduct = productRepository.save(product);

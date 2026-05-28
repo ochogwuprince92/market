@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,12 +27,14 @@ public class ProductController {
 
     @PostMapping("/add")
     public ResponseEntity<ProductResponseDto> addProduct(
-            @RequestBody @Valid ProductRequestDto productRequestDto) {
+            @RequestBody @Valid ProductRequestDto productRequestDto, Authentication authentication) {
 
+        // Extract userId from JWT token
+        UUID userId = UUID.fromString((String) authentication.getPrincipal());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(productService.addProduct(productRequestDto));
+                .body(productService.addProduct(productRequestDto, userId));
     }
 
     @GetMapping("/{id}")
@@ -51,14 +54,6 @@ public class ProductController {
     public String deleteProduct(@PathVariable UUID id) {
         productService.deleteProduct(id);
         return "Item deleted successfully.";
-    }
-
-    @PostMapping("/user/{userId}")
-    public ProductResponseDto addProductToUser(
-            @PathVariable UUID userId,
-            @RequestBody @Valid ProductRequestDto productRequestDto) {
-
-        return productService.addProductToUser(userId, productRequestDto);
     }
 
     @GetMapping("/user/{userId}")
