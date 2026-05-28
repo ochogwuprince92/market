@@ -39,10 +39,10 @@ public class User {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
+    @NotBlank(message = "Password is required")
     private String password;
 
     // Email verification fields
-//    @Column(nullable = false)
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
