@@ -29,7 +29,7 @@ public class Order {
     private User user;
 
 //    cart for the order
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 

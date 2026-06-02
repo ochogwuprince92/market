@@ -63,12 +63,12 @@ public class CartService {
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new CartNotFoundException("Product not found: " + productId));
 
-            int quantity = requestDto.getQuantity() == null || requestDto.getQuantity() <= 0
-                    ? 1 : requestDto.getQuantity();
+            // ← Only add if not already in cart
+            boolean alreadyInCart = cart.getProducts().stream()
+                    .anyMatch(p -> p.getId().equals(productId));
 
-            for (int i = 0; i < quantity; i++) {
-                cart.getProducts().add(product);
-            }
+            if (!alreadyInCart) {
+                cart.getProducts().add(product);            }
         }
 
         Cart savedCart = cartRepository.save(cart);
@@ -95,7 +95,15 @@ public class CartService {
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() -> new CartNotFoundException("Cart not found"));
 
-        cart.getProducts().removeIf(p -> p.getId().equals(productId));
+        boolean removed = false;
+        java.util.Iterator<Product> iterator = cart.getProducts().iterator();
+        while (iterator.hasNext()) {
+            Product p = iterator.next();
+            if (p.getId().equals(productId) && !removed) {
+                iterator.remove();
+                removed = true;
+            }
+        }
         Cart savedCart = cartRepository.save(cart);
 
         return mapToCartResponse(savedCart);
@@ -107,7 +115,7 @@ public class CartService {
     private CartResponseDto mapToCartResponse(Cart cart) {
         List<ProductResponseDto> productDtos = cart.getProducts()
                 .stream()
-                .map(p -> new ProductResponseDto(
+                   .map(p -> new ProductResponseDto(
                         p.getId(),
                         p.getName(),
                         p.getDescription(),

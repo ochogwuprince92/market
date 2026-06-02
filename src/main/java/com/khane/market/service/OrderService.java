@@ -19,6 +19,7 @@ import com.khane.market.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,6 +37,7 @@ public class OrderService {
     private final PaystackService paystackService;
 
     // Create order
+    @Transactional
     public OrderResponseDto createOrder(UUID userId, OrderRequestDto dto) {
 
         User user = userRepository.findById(userId)
@@ -44,10 +46,20 @@ public class OrderService {
         Cart cart = cartRepository.findById(dto.getCartId())
                 .orElseThrow(() -> new CartNotFoundException("Cart not found"));
 
+        if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
+            throw new IllegalStateException("Cannot create order from an empty cart");
+        }
+
         BigDecimal totalPrice = cart.getProducts()
                 .stream()
-                .map(p -> p.getPrice().multiply(BigDecimal.valueOf(p.getQuantity())))
+                .map(p -> p.getPrice() != null ? p.getPrice() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (totalPrice.compareTo(BigDecimal.ZERO) == 0) {
+            throw new IllegalStateException("Cannot create order with zero total");
+        }
+
+        log.info("Creating order for user: {} with total: {}", userId, totalPrice);
 
         Order order = new Order();
         order.setUser(user);
@@ -57,24 +69,23 @@ public class OrderService {
         order.setCreatedAt(LocalDateTime.now());
 
         Order savedOrder = orderRepository.save(order);
+
+        log.info("Order created: {} with totalPrice: {}", savedOrder.getId(), savedOrder.getTotalPrice());
+
         return mapToOrderResponse(savedOrder);
     }
 
     // Get order by ID
     public OrderResponseDto getOrderById(UUID orderId) {
-
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-
         return mapToOrderResponse(order);
     }
 
     // Get orders by user
     public List<OrderResponseDto> getOrdersByUser(UUID userId) {
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
-
         return orderRepository.findByUser(user)
                 .stream()
                 .map(this::mapToOrderResponse)
@@ -83,40 +94,39 @@ public class OrderService {
 
     // Update order status
     public OrderResponseDto updateOrderStatus(UUID orderId, OrderStatus status) {
-
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-
         order.setStatus(status);
-        Order updatedOrder = orderRepository.save(order);
-
-        return mapToOrderResponse(updatedOrder);
+        return mapToOrderResponse(orderRepository.save(order));
     }
 
-    // Initiate payment for an order
+    // Initiate payment
+    @Transactional
     public PaystackInitializeResponse initiatePayment(UUID orderId, String userEmail, String callbackUrl) {
         log.info("Initiating payment for order: {}", orderId);
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
 
-        // Check if payment is already initiated
+        if (order.getTotalPrice() == null) {
+            throw new IllegalStateException("Order total price is null for order: " + orderId);
+        }
+
         if (order.getPaystackReference() != null) {
             log.warn("Payment already initiated for order: {}", orderId);
             throw new IllegalStateException("Payment has already been initiated for this order");
         }
 
-        // Create payment request
+        log.info("Order totalPrice for payment: {}", order.getTotalPrice());
+
         PaystackInitializeRequest request = new PaystackInitializeRequest();
         request.setOrderId(orderId);
         request.setAmount(order.getTotalPrice());
         request.setEmail(userEmail);
         request.setCallbackUrl(callbackUrl);
 
-        // Initialize payment with Paystack
         PaystackInitializeResponse response = paystackService.initializePayment(request);
 
-        // Update order with payment details
         order.setPaystackReference(response.getPaystackReference());
         order.setPaystackAccessCode(response.getAccessCode());
         order.setAuthorizationUrl(response.getAuthorizationUrl());
@@ -128,14 +138,15 @@ public class OrderService {
         return response;
     }
 
-    // Complete payment (called from webhook or manual verification)
+    // Complete payment
+    @Transactional
     public PaymentStatusDto completePayment(String paystackReference) {
         log.info("Completing payment with reference: {}", paystackReference);
 
         Order order = orderRepository.findByPaystackReference(paystackReference)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found for reference: " + paystackReference));
+                .orElseThrow(() -> new OrderNotFoundException(
+                        "Order not found for reference: " + paystackReference));
 
-        // Verify payment with Paystack
         var verifyResponse = paystackService.verifyPayment(paystackReference);
 
         if (!"success".equalsIgnoreCase(verifyResponse.getData().getStatus())) {
@@ -143,14 +154,20 @@ public class OrderService {
             return createPaymentStatusDto(order, "failed", "Payment was not successful");
         }
 
-        // Update order status to PAID
         order.setStatus(OrderStatus.PAID);
         order.setPaidAt(LocalDateTime.now());
         order.setPaymentMethod("Paystack");
-
         orderRepository.save(order);
 
-        log.info("Payment completed successfully for order: {}", order.getId());
+        // Clear cart after successful payment
+        Cart cart = order.getCart();
+        if (cart != null) {
+            cart.getProducts().clear();
+            cartRepository.save(cart);
+            log.info("Cart cleared after payment for order: {}", order.getId());
+        }
+
+        log.info("Payment completed for order: {}", order.getId());
         return createPaymentStatusDto(order, "success", "Payment completed successfully");
     }
 
@@ -158,13 +175,12 @@ public class OrderService {
     public PaymentStatusDto getPaymentStatus(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found"));
-
         String status = order.getStatus() == OrderStatus.PAID ? "success" : "pending";
         return createPaymentStatusDto(order, status, "Status: " + order.getStatus());
     }
 
-    // Helper method to create PaymentStatusDto
-    private PaymentStatusDto createPaymentStatusDto(Order order, String status, String message) {
+    private PaymentStatusDto createPaymentStatusDto(
+            Order order, String status, String message) {
         return new PaymentStatusDto(
                 message,
                 order.getPaymentMethod(),
@@ -176,9 +192,7 @@ public class OrderService {
         );
     }
 
-    // Map Order to OrderResponseDto
     private OrderResponseDto mapToOrderResponse(Order order) {
-
         List<ProductResponseDto> products = order.getCart().getProducts()
                 .stream()
                 .map(p -> new ProductResponseDto(
@@ -191,8 +205,6 @@ public class OrderService {
                         p.getUser() != null ? p.getUser().getId() : null
                 ))
                 .toList();
-        // Use totalPrice directly from order
-        BigDecimal totalPrice = order.getTotalPrice();
 
         return new OrderResponseDto(
                 order.getId(),
@@ -200,7 +212,7 @@ public class OrderService {
                 order.getCart().getId(),
                 order.getStatus(),
                 products,
-                totalPrice,
+                order.getTotalPrice(),
                 order.getCreatedAt()
         );
     }

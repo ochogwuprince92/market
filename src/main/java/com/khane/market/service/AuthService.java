@@ -45,11 +45,6 @@ public class AuthService {
             throw new RuntimeException("Phone number already registered");
         }
 
-        // Check if username already exists
-        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
-            throw new RuntimeException("Username already taken");
-        }
-
         // Generate email verification token
         String verificationToken = TokenGenerator.generateToken();
         LocalDateTime tokenExpiry = LocalDateTime.now().plusHours(24);
@@ -57,7 +52,6 @@ public class AuthService {
         // Build new user
         User user = new User();
         user.setName(request.getName());
-        user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(request.getPassword()));

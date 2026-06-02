@@ -17,7 +17,6 @@ public class PaystackInitializeRequest {
     @NotNull(message = "Order ID is required")
     private UUID orderId;
 
-    @NotNull(message = "Amount is required")
     private BigDecimal amount;
 
     @NotNull(message = "Email is required")
